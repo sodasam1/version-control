@@ -1,0 +1,22 @@
+# Version Control's settings for the shared installer (deploy/appkit.sh). Reference: kit/appkit/README.md in personal-site.
+NAME=version-control
+UNIXNAME=versioncontrol
+TITLE="Version Control"
+BASE_PATH=/version-control
+PORT=8102
+PKGS="py3-flask py3-waitress ffmpeg"
+SVC_HOME=/var/empty
+SRC_MARKER="app/wsgi.py static/owner.html"
+HEALTH_PATH=/version-control/health
+SITE_AUTH=1
+# The audio lives on the big storage volume, mounted at /var/version-control (personal-site RESTORE.html, storage steps).
+# The installer stops, before creating anything, if that volume is not mounted and holds a .volume-ok file.
+REQUIRE_MOUNT=/var/version-control
+DIRS="/var/version-control,@svc,@svc,751 /var/version-control/backup,@svc,@svc,755 /var/version-control/restore,@login,@svc,775"
+CONF_LINES="VERSIONCONTROL_DATA_DIR=/var/version-control
+VERSIONCONTROL_REQUIRE_VOLUME=1
+VERSIONCONTROL_BASE_PATH=/version-control
+VERSIONCONTROL_STATIC_DIR=/usr/local/version-control/static
+VERSIONCONTROL_BACKUP_DIR=/var/version-control/backup
+VERSIONCONTROL_RESTORE_DIR=/var/version-control/restore
+VERSIONCONTROL_OWNER_NAME=Owner"

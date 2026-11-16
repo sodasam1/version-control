@@ -1,0 +1,32 @@
+/* Version Control's own few rules, on top of minimal.css */
+.versions { display: flex; gap: 8px; flex-wrap: wrap; margin: .6rem 0; }
+.versions .ver { min-height: 40px; padding: .3rem .9rem; }
+.versions .ver[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
+.versions .key { color: var(--muted); font-size: .8rem; }
+.transport { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: .5rem 0; }
+.transport .time { font-variant-numeric: tabular-nums; min-width: 6.5rem; }
+.options { display: flex; gap: 16px; flex-wrap: wrap; margin: .4rem 0; }
+label.inline { display: inline-flex; gap: 6px; align-items: center; margin: 0; color: var(--text); }
+.small { font-size: .85rem; }
+.notes { white-space: pre-wrap; overflow-wrap: anywhere; }
+.comments { list-style: none; margin: 0; padding: 0; }
+.comments li { padding: .6rem 0 .6rem 8px; border-bottom: 1px solid var(--line); }
+.comments li.now { box-shadow: inset 2px 0 var(--accent); }
+.comments .body { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: .2rem; }
+.comments .stamp { font-variant-numeric: tabular-nums; }
+.comments .actions { display: flex; gap: 14px; margin-top: .2rem; }
+.comment-form { display: grid; gap: .5rem; margin: 1rem 0; }
+.comment-form .row2 { display: flex; gap: 12px; align-items: center; }
+.comment-form .when { width: 5.5rem; }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.song-row { cursor: pointer; }
+.cols { display: grid; gap: 1.2rem; }
+.panel-box { border-top: 1px solid var(--line); margin-top: 1rem; padding-top: .6rem; }
+.owner .tabs { display: flex; gap: 18px; border-bottom: 1px solid var(--line); margin-bottom: 1rem; }
+.owner .tabs button { border: 0; border-radius: 0; padding: .4rem 0; color: var(--muted); }
+.owner .tabs button[aria-pressed="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.owner .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: .3rem 0; }
+.owner .actions button, .owner .actions .btn { min-height: 30px; padding: .2rem .6rem; }
+.owner .vrow, .owner .lrow { display: grid; gap: .3rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.owner .vrow input[type=text], .owner .lrow input[type=text] { max-width: 24rem; }
+.owner select { width: auto; border: 1px solid var(--line); padding: .3rem; background: var(--bg); color: var(--text); }

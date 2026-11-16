@@ -1,0 +1,61 @@
+/* Minimal: the shared look of every app on the site. One ink colour, hairlines instead of boxes, no shadows, no pills.
+   Choices (set by theme.js / theme-menu.js on <html>): data-colors = light | dark (absent = follow the device); data-accent = blue ... orange.
+   The accent is used only for the current tab, primary buttons and the played part of a waveform. */
+:root {
+  --bg: #fff; --panel: #f6f6f6; --text: #111; --muted: #6b6b6b; --line: #e4e4e4;
+  --accent: var(--acc-l, #1d5fd1); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00;
+  --fs: 15px; --lh: 1.45; --r: 4px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #101010; --panel: #1a1a1a; --text: #ececec; --muted: #9a9a9a; --line: #2c2c2c;
+    --accent: var(--acc-d, #6ea8ff); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
+}
+html[data-colors="light"] { color-scheme: light; --bg: #fff; --panel: #f6f6f6; --text: #111; --muted: #6b6b6b; --line: #e4e4e4;
+  --accent: var(--acc-l, #1d5fd1); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00; }
+html[data-colors="dark"] { color-scheme: dark; --bg: #101010; --panel: #1a1a1a; --text: #ececec; --muted: #9a9a9a; --line: #2c2c2c;
+  --accent: var(--acc-d, #6ea8ff); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
+html[data-accent="blue"], [data-a="blue"] { --acc-l: #1d5fd1; --acc-d: #6ea8ff; }
+html[data-accent="teal"], [data-a="teal"] { --acc-l: #0f766e; --acc-d: #3ecbb9; }
+html[data-accent="green"], [data-a="green"] { --acc-l: #2e7d32; --acc-d: #5fd068; }
+html[data-accent="purple"], [data-a="purple"] { --acc-l: #7b3fc4; --acc-d: #b794f6; }
+html[data-accent="pink"], [data-a="pink"] { --acc-l: #c2185b; --acc-d: #ff8fb3; }
+html[data-accent="ink"], [data-a="ink"] { --acc-l: #111; --acc-d: #ececec; }
+html[data-accent="orange"], [data-a="orange"] { --acc-l: #c8400b; --acc-d: #ff7a3d; }
+
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--fs)/var(--lh) system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 46rem; margin: 0 auto; padding: 0 16px 6rem; }
+header.site { display: flex; align-items: baseline; gap: 18px; padding: 1rem 0; border-bottom: 1px solid var(--line); margin-bottom: 1rem; flex-wrap: wrap; }
+header.site h1 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+header.site nav { display: flex; gap: 18px; flex: 1; flex-wrap: wrap; }
+h2 { font-size: 1rem; font-weight: 500; margin: 1.4rem 0 .5rem; }
+a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+.muted { color: var(--muted); }
+.err { color: var(--err); }
+button, .btn { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--line); border-radius: var(--r); padding: .4rem .8rem; min-height: 36px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+button:hover:not(:disabled), .btn:hover { border-color: var(--text); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary, .btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.link { border: 0; padding: 0; min-height: 0; text-decoration: underline; background: none; }
+button[aria-pressed="true"].tab, nav a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--accent); }
+input[type=text], input[type=password], input[type=search], textarea, select {
+  font: inherit; color: var(--text); background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: .45rem 0; width: 100%; }
+textarea { border: 1px solid var(--line); border-radius: var(--r); padding: .5rem; }
+input:focus, textarea:focus, select:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label { display: block; margin: .8rem 0 .2rem; color: var(--muted); }
+.row { display: flex; gap: 12px; align-items: center; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+.row .grow { flex: 1; min-width: 0; }
+.row .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row.playing { box-shadow: inset 2px 0 var(--text); padding-left: 8px; }
+.chip { color: var(--muted); margin-right: .7rem; }
+.notice { border-left: 2px solid var(--line); padding: .3rem .8rem; margin: 1rem 0; color: var(--muted); }
+.play { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: var(--r); }
+canvas.wave { display: block; width: 100%; height: 64px; cursor: pointer; touch-action: none; }
+.theme-row, .accent-row { display: flex; gap: 6px; flex-wrap: wrap; margin: .3rem 0; }
+.accent-row button { width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--bg); background: var(--acc-l); box-shadow: 0 0 0 1px var(--line); }
+@media (prefers-color-scheme: dark) { html:not([data-colors="light"]) .accent-row button { background: var(--acc-d); } }
+html[data-colors="dark"] .accent-row button { background: var(--acc-d); }
+.accent-row button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text); }
+.theme-row button[aria-pressed="true"] { border-color: var(--text); font-weight: 600; }
+@media (max-width: 520px) { .wrap { padding: 0 12px 6rem; } }
