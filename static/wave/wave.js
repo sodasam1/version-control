@@ -55,20 +55,39 @@ window.Wave = (function () {
     }
 
     function at(ev) { const r = canvas.getBoundingClientRect(); return Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * st.duration; }
-    let drag = null;
+    let drag = null, touch = null;
+    // A finger must not be trapped by the waveform: it may be scrolling the page. touch-action pan-y leaves vertical drags to the browser (it then sends
+    // pointercancel); a tap seeks when the finger lifts; a mostly horizontal drag scrubs. A mouse or pen seeks on press, as before.
+    canvas.style.touchAction = "pan-y";
     canvas.addEventListener("pointerdown", (ev) => {
       if (!st.duration) return;
+      if (ev.pointerType === "touch") { touch = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, scrub: false, moved: false }; return; }
       canvas.setPointerCapture(ev.pointerId);
       drag = { loop: ev.shiftKey || ev.altKey, start: at(ev) };
       if (!drag.loop && opts.onSeek) opts.onSeek(drag.start);
     });
     canvas.addEventListener("pointermove", (ev) => {
+      if (touch && ev.pointerId === touch.id) {
+        const dx = Math.abs(ev.clientX - touch.x), dy = Math.abs(ev.clientY - touch.y);
+        if (dx > 10 || dy > 10) touch.moved = true;                                    // past the tap slop: no longer a tap
+        if (!touch.scrub && dx > 8 && dx > dy) { touch.scrub = true; canvas.setPointerCapture(ev.pointerId); }
+        if (touch.scrub && opts.onSeek) opts.onSeek(at(ev));
+        return;
+      }
       if (!drag) return;
       const t = at(ev);
       if (drag.loop) { const a = Math.min(drag.start, t), b = Math.max(drag.start, t); st.loop = { a, b, on: true }; draw(); }
       else if (opts.onSeek) opts.onSeek(t);
     });
-    const end = () => { if (drag && drag.loop && st.loop && opts.onLoop) opts.onLoop(st.loop.a, st.loop.b); drag = null; };
+    const end = (ev) => {
+      if (touch && ev && ev.pointerId === touch.id) {
+        if (ev.type === "pointerup" && !touch.scrub && !touch.moved && opts.onSeek) opts.onSeek(at(ev));     // a tap
+        touch = null;
+        return;
+      }
+      if (drag && drag.loop && st.loop && opts.onLoop) opts.onLoop(st.loop.a, st.loop.b);
+      drag = null;
+    };
     canvas.addEventListener("pointerup", end); canvas.addEventListener("pointercancel", end);
     canvas.tabIndex = 0; canvas.setAttribute("role", "slider"); canvas.setAttribute("aria-label", opts.label || "Waveform: seek");
     canvas.setAttribute("aria-valuemin", "0");

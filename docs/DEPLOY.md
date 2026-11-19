@@ -80,6 +80,7 @@ doas sh ~/staging/version-control/deploy/install.sh
 Do this after step 3, signed in. The slow page you saw (5 to 10 seconds) has three possible causes and each is told apart by a number; **do not move anything to an SSD before you have the numbers.**
 1. Studio, **Backup** tab, scroll to **Speed check**, press **Run speed check**. It writes and deletes a few 4 KB test files and changes nothing else. Read:
    - *Saving to the data volume* (ms) against *Saving to the boot disk* (ms): under about 50 ms is fine; **over 150 ms on the volume and much lower on the boot disk means the HDD's wait for each write is the problem** (it also explains the slow public-to-unlisted switch).
+   - *A database save on the data volume / on the boot disk* (new): a real SQLite save with this app's settings. The first number is what you wait for on a normal save; the second is the background step that actually reaches the disk (this is where a slow volume shows up).
    - *Reading the database (cold)*: over 300 ms means reads are slow too.
    - *Server load*: above 1.5 on this one-CPU server means something is using the processor (a track being measured, another service); *Swap*: a large used figure means memory pressure.
    - The advice lines below the numbers say which of these it saw.
@@ -106,3 +107,13 @@ The Backup tab's *Back up now* and the pull job still capture the database from 
 - music-share: an upload with a very long file name used to fail with an error and leave an orphan audio file; now the title is shortened and the upload succeeds. 21 attack tests (injection strings, hostile file names, cross-site writes, cache mix-ups between owner and guest, Host-header tricks, fake audio) pass.
 - Version Control: same patterns, **not yet attack-tested** (T-27 in `docs/TODO.md`).
 - Your passphrase is the one thing code cannot fix: 5 to 6 random words (or 15+ random characters). The limit is 5 wrong guesses per client per 15 minutes.
+
+## 11. music-share on your phone (about 5 minutes; the browser tests cannot judge iOS Safari)
+What changed for phones: waveforms no longer trap a scrolling finger (a tap seeks, a sideways drag scrubs, an up-down drag scrolls the page); every button, tab and link is at least 44 x 44 px; text boxes are 16 px so iOS does not zoom in; the bottom bar clears the home bar and notch; lock-screen and headset controls show the track title with play, pause and a seekable position; the Studio's upload box says "Tap here to choose audio files". Version Control gets the waveform touch change too (same shared file).
+On an iPhone (Safari), open the **public** page:
+1. Scroll the list with your thumb starting on a waveform: the page scrolls and nothing starts playing.
+2. Tap a waveform: that track starts from that point. Drag sideways on it: the playhead follows your finger.
+3. Press play, lock the phone: the lock screen shows the track title and a play/pause and position control. (If it does not, tell me which iOS version.)
+4. Turn the phone sideways: nothing is cut off; the bottom bar is slim.
+5. Studio (signed in): tap **Edit** on a track and tap a text box: the page must **not** zoom in. Upload a file from the Files app or Voice Memos with the dashed box.
+
