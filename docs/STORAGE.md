@@ -5,7 +5,7 @@ The set-up of the volume itself (partitioning, `/etc/fstab`, the `.volume-ok` ma
 **`docs/STORAGE.md` in the `personal-site` repo** (and `RESTORE.html`, section B3). It replaces the earlier version of this file, which described a 40 GB volume mounted at `/var/version-control`.
 
 What is specific to Version Control:
-- **The installer** (`doas sh ~/version-control/deploy/install.sh --check`, then without `--check`) stops before creating anything unless `/mnt/data` is mounted and holds `/mnt/data/.volume-ok`. The service script
+- **The installer** (`doas sh ~/staging/version-control/deploy/install.sh --check`, then without `--check`) stops before creating anything unless `/mnt/data` is mounted and holds `/mnt/data/.volume-ok`. The service script
   refuses to start without it (`rc_pre`), and so does the app itself (`VERSIONCONTROL_REQUIRE_VOLUME=1` with `VERSIONCONTROL_VOLUME_MARKER=/mnt/data/.volume-ok`), so audio can never silently fill the 25 GB boot disk.
 - **Backups hard-link the audio** into `/mnt/data/apps/version-control/backup`: no extra space, and the audio survives "Delete forever". This needs `data` and `backup` on the **same filesystem**, which is why they sit side by side
   under `/mnt/data`. It does **not** protect against losing the volume: pull `/mnt/data/apps/version-control/backup` to your computer with FreeFileSync.

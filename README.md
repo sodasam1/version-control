@@ -26,8 +26,8 @@ metadata in one SQLite file, Flask + waitress + ffmpeg only, uploaded by hand wi
 
 ## Storage and install
 Audio, database, backup and restore folders live on the big volume mounted at `/var/version-control`: see `docs/STORAGE.md` (turning the 40 GB volume into plain storage; destructive, with a stop point).
-Install (after the volume is mounted and the site login is installed: personal-site `RESTORE.html`): upload this folder to `~/version-control`,
-`doas sh ~/version-control/deploy/install.sh --check`, then without `--check`. Everyday updates: `--app-files-only`. Settings: `/etc/versioncontrol.conf`
+Install (after the volume is mounted and the site login is installed: personal-site `RESTORE.html`): upload this folder to `~/staging/version-control`,
+`doas sh ~/staging/version-control/deploy/install.sh --check`, then without `--check`. Everyday updates: `--app-files-only`. Settings: `/etc/versioncontrol.conf`
 (`VERSIONCONTROL_DATA_DIR`, `_BASE_PATH`, `_BACKUP_DIR`, `_RESTORE_DIR`, `_MAX_UPLOAD_MB` (1024), `_OWNER_NAME`, `_REQUIRE_VOLUME`).
 
 ## Tests (offline)
