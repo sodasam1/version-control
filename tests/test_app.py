@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import shutil
 import threading
 
@@ -398,3 +399,8 @@ def test_restore_reports_damage_instead_of_hiding_it(owner, tmp_path):
     f.unlink(); f.write_bytes(b"corrupted")                       # replace the hard link with a damaged copy; the original is untouched
     n, problems = backup.restore(tmp_path / "backup", tmp_path / "fresh")
     assert n == 1 and len(problems) == 1 and "checksum mismatch" in problems[0]
+
+
+def test_big_uploads_are_parked_on_the_data_volume_not_the_boot_disks_tmp(owner, tmp_path):
+    import tempfile
+    assert Path(tempfile.gettempdir()) == tmp_path / "data" / "tmp"             # Werkzeug's spill-over file for a large upload goes here

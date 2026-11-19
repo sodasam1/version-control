@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import sqlite3
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -73,6 +74,9 @@ def create_app(overrides=None):
     os.umask(0o027)                                           # files this service creates (the database holds link secrets) are not readable by other users
     (data_dir / "audio").mkdir(mode=0o750, parents=True, exist_ok=True)
     (data_dir / "tmp").mkdir(mode=0o750, parents=True, exist_ok=True)
+    # Werkzeug parks a big upload (up to VERSIONCONTROL_MAX_UPLOAD_MB, 1 GB by default) in a temp file while it parses the form. Keep that on the
+    # data volume, not in the system /tmp on the small boot disk.
+    tempfile.tempdir = str(data_dir / "tmp")
     db_path = data_dir / "versioncontrol.db"
     db.init(db_path)
     worker = jobs.Worker(data_dir, ffmpeg, ffprobe, inline=bool(cfg.get("JOBS_SYNC")))
