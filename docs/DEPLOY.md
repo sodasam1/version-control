@@ -12,6 +12,8 @@ Not verified by me (no server here): OpenBSD commands, FreeFileSync menus. Every
 | 4 | server | Install Version Control for the first time |
 | 5 | server | Reboot rehearsal, then the checklists |
 
+**Also this round (2026-11-19):** the login service fix, the `/private/` refusal and the Riffbox single-login switch have their own steps in personal-site `docs/DEPLOY.md`; do those **before** or **after** this guide, they do not depend on each other. Sections 9 and 10 below cover music-share's speed check and what the security testing changed.
+
 Already in place (per `docs/TODO.md`): the site login, the data volume at `/mnt/data` (holds `.volume-ok`), upload staging under `~/staging/<app>`.
 
 ## 1. Merge the two branches on GitHub
@@ -73,3 +75,34 @@ doas sh ~/staging/version-control/deploy/install.sh
 2. Studio: the menu (Tracks, Archive, Playlists, Backup) appears at once; drop a file: a progress bar runs; the track appears; mark it **Listed** (Edit) and it shows on the public page.
 3. Open a track link in a private window: play, a bar stays at the bottom, press space to pause. Back in the Studio the track says "played 1x".
 4. Paste a link into a chat app: the preview shows the title (no image). The Studio's "opened" count does not go up for that preview.
+
+## 9. music-share: is the public page slow because of the disk? (measure first, about 5 minutes)
+Do this after step 3, signed in. The slow page you saw (5 to 10 seconds) has three possible causes and each is told apart by a number; **do not move anything to an SSD before you have the numbers.**
+1. Studio, **Backup** tab, scroll to **Speed check**, press **Run speed check**. It writes and deletes a few 4 KB test files and changes nothing else. Read:
+   - *Saving to the data volume* (ms) against *Saving to the boot disk* (ms): under about 50 ms is fine; **over 150 ms on the volume and much lower on the boot disk means the HDD's wait for each write is the problem** (it also explains the slow public-to-unlisted switch).
+   - *Reading the database (cold)*: over 300 ms means reads are slow too.
+   - *Server load*: above 1.5 on this one-CPU server means something is using the processor (a track being measured, another service); *Swap*: a large used figure means memory pressure.
+   - The advice lines below the numbers say which of these it saw.
+2. Open the public page in a browser, developer tools (F12), **Network** tab, reload, click the first request (the page itself), **Timing** or the response headers: `Server-Timing: db;dur=..., render;dur=..., app;dur=...`.
+   If `app` is a few milliseconds but the whole request takes seconds, the time is **not** in this app: it is relayd, TLS or the network (or the server being starved). Say so and look at the server load, not the disk.
+3. Compare: run the check once when the server is idle and once while a track is being measured.
+
+**If, and only if, the speed check says the data volume's saves are slow and the boot disk's are fast:** move just the small database to the boot disk (the audio stays on the volume):
+```
+doas rcctl stop musicshare
+doas mkdir /var/music-share-db
+doas cp -p /mnt/data/apps/music-share/data/musicshare.db* /var/music-share-db/
+doas chown -R _musicshare:_musicshare /var/music-share-db
+doas chmod 700 /var/music-share-db
+printf 'MUSICSHARE_DB_DIR=/var/music-share-db\n' | doas tee -a /etc/musicshare.conf
+doas rcctl start musicshare
+```
+Line by line: stop the app so no write is in flight; make the folder; **copy** (never move) the database and its `-wal`/`-shm` side files with owner and mode kept; give the app's own user the folder; keep it private; add the one setting; start. The old database stays where it is as a copy until you delete it yourself.
+Then press **Run speed check** again (it prints the database folder) and check `/music-share/health`. **Way back:** stop the app, delete that line from `/etc/musicshare.conf`, start it: it uses the old copy again (which is stale by whatever you changed since; copy the newer files back first if that matters).
+The Backup tab's *Back up now* and the pull job still capture the database from its new place. *Unverified:* the `-wal`/`-shm` glob when no side files exist (the `cp` then complains about the pattern; ignore that message if `musicshare.db` itself copied).
+
+## 10. What the security testing changed (nothing to do, but know it)
+- Login service: the parallel-guess race is fixed (personal-site `docs/DEPLOY.md` section 4 deploys it). The server keeps one central, throttled passphrase check; `/private/` moves behind it fully (personal-site `docs/DEPLOY.md` section 5).
+- music-share: an upload with a very long file name used to fail with an error and leave an orphan audio file; now the title is shortened and the upload succeeds. 21 attack tests (injection strings, hostile file names, cross-site writes, cache mix-ups between owner and guest, Host-header tricks, fake audio) pass.
+- Version Control: same patterns, **not yet attack-tested** (T-27 in `docs/TODO.md`).
+- Your passphrase is the one thing code cannot fix: 5 to 6 random words (or 15+ random characters). The limit is 5 wrong guesses per client per 15 minutes.
