@@ -34,8 +34,15 @@ Install (after the data volume is mounted and the site login is installed: perso
 ## Tests (offline)
 ```
 python3 -m venv /tmp/v && /tmp/v/bin/pip install flask==3.1.3 werkzeug==3.1.9 itsdangerous==2.2.0 waitress==3.0.2 pytest
-/tmp/v/bin/python -m pytest -q tests                              # 48 tests (ffmpeg needed for the audio ones)
+/tmp/v/bin/python -m pytest -q tests                              # 54 tests (ffmpeg needed for the audio ones)
 VENV_PY=/tmp/v/bin/python sh tests/installer/test-install.sh      # installer in test mode, incl. the "volume not mounted" refusals
 VC_PY=/tmp/v/bin/python node tests/e2e/smoke.cjs                  # real Chromium: owner page, share page, A/B, loop, exact loop, match, blind, comments
 ```
 The kit under `app/siteauth`, `app/kitaudio`, `static/minimal`, `static/wave`, `deploy/appkit.sh` is vendored from personal-site (`kit.use`).
+
+## Look and feel
+Version Control shares its look with music-share: the same header, logo and favicon, round play buttons, chunky waveforms with the times at the ends, the same cards and spacing, light/dark and the accent choices.
+`static/listen.css` is that shared look: **the same file lives in both repos (music-share and version-control); keep them identical** (TODO: move it into the shared kit). Nothing social: no accounts, likes or follows; comments are the point of this app and need only a name.
+Speed: the Owner page's menu and placeholders are in the HTML (nothing waits for data); static files are cached for a year by content address and served gzipped from memory; the JSON and HTML answers are gzipped; every answer carries a `Server-Timing: app` header
+(browser developer tools, Network, Timing) so a slow page can be told apart as slow server or slow network.
+Deploying: `docs/DEPLOY.md`.

@@ -14,9 +14,10 @@
     let data;
     try { data = await call("/data", "GET"); } catch (e) { root.textContent = "This link is not available."; return; }
     if (data.song.notes) root.append(window.Panel.h("p", { class: "muted notes" }, data.song.notes));
-    const holder = window.Panel.h("div");
+    const holder = window.Panel.h("div", { class: "hero track" });
     root.append(holder);
     app._panel = window.Panel.create(holder, {   // kept on the element so the browser test can look at the player
+      title: data.song.title, meta: data.versions.length + (data.versions.length === 1 ? " version" : " versions") + (data.versions.length ? " \u00b7 latest: " + data.versions[data.versions.length - 1].label : ""),
       versions: data.versions, comments: data.comments, allowComments: data.allow_comments, ownerView: data.owner,
       api: { post: (b) => call("/comments", "POST", b), edit: (id, body) => call("/comments/" + id, "PATCH", { body }), del: (id) => call("/comments/" + id, "DELETE") },
     });

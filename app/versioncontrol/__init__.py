@@ -5,8 +5,10 @@ Anyone with a link:  /s/<token>   the song's page: listen, switch between versio
                      /s/<token>/data, /comments, /audio/<version>, /slice/<version>
 Every route is declared @public, @owner or @token; one with no declaration is owner-only (see siteauth).
 """
+import gzip
 import hashlib
 import json
+import mimetypes
 import os
 import re
 import shutil
@@ -16,7 +18,7 @@ import threading
 import time
 from pathlib import Path
 
-from flask import Blueprint, Flask, abort, after_this_request, g, jsonify, redirect, render_template, request, send_file, send_from_directory
+from flask import Blueprint, Flask, Response, abort, g, jsonify, redirect, render_template, request, send_file
 from kitaudio import extras, media
 from siteauth import SiteAuth
 from siteauth.ratelimit import Limiter
@@ -35,6 +37,7 @@ MAX_TITLE, MAX_NOTES, MAX_LABEL, MAX_NAME, MAX_COMMENT = 200, 2000, 80, 40, 2000
 EDIT_WINDOW = 15 * 60                    # a commenter can fix or remove their own comment for 15 minutes
 MAX_SLICE_S = 60.0                       # precision-mode loop region, server-side cap
 LOOPBACK = ("127.0.0.1", "::1")
+TEXT_TYPES = ("text/css", "text/javascript", "application/javascript", "image/svg+xml", "text/html")
 
 
 class Invalid(Exception):
@@ -102,6 +105,26 @@ def create_app(overrides=None):
         c = g.pop("db", None)
         if c is not None:
             c.close()
+
+    @app.before_request
+    def start_timer():
+        g.t0 = time.perf_counter()
+
+    @app.after_request
+    def timing_and_gzip(resp):
+        """Server-Timing: how long this server spent on the request (browsers show it under Network > Timing), so a slow page can be told
+        apart as "slow server/disk" or "slow network". Also gzip for JSON and HTML answers (the song data carries waveforms)."""
+        t0 = g.get("t0")
+        if t0 is not None:
+            resp.headers["Server-Timing"] = f"app;dur={(time.perf_counter() - t0) * 1000:.1f}"
+        if (resp.status_code == 200 and not resp.direct_passthrough and resp.mimetype in ("application/json", "text/html")
+                and "Content-Encoding" not in resp.headers and "gzip" in request.headers.get("Accept-Encoding", "")):
+            body = resp.get_data()
+            if len(body) > 1000:
+                resp.set_data(gzip.compress(body, 5))
+                resp.headers["Content-Encoding"] = "gzip"
+                resp.vary.add("Accept-Encoding")
+        return resp
 
     @app.after_request
     def headers(resp):
@@ -245,12 +268,47 @@ def create_app(overrides=None):
     def health():
         return jsonify(ok=True)
 
+    # Static files: each is read once, compressed once, and kept in memory. Pages refer to them as /static/x.css?v=<hash of the content>,
+    # which may be cached for a year (the address changes when the file does); a bare address is revalidated with its ETag.
+    assets = {}
+
+    def load_asset(name):
+        path = (static_dir / name).resolve()
+        if name.startswith(".") or "/." in name or static_dir.resolve() not in path.parents or not path.is_file():
+            return None
+        st = path.stat()
+        hit = assets.get(name)
+        if hit is None or hit["stamp"] != (st.st_mtime_ns, st.st_size):
+            raw = path.read_bytes()
+            mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
+            hit = {"stamp": (st.st_mtime_ns, st.st_size), "raw": raw, "mime": mime, "etag": '"' + hashlib.sha1(raw).hexdigest()[:16] + '"',
+                   "gz": gzip.compress(raw, 9) if mime in TEXT_TYPES and len(raw) > 600 else None}
+            assets[name] = hit
+        return hit
+
+    def asset(name):
+        a = load_asset(name)
+        return f"{base}/static/{name}" + (f"?v={a['etag'][1:9]}" if a else "")
+
+    app.jinja_env.globals["asset"] = asset
+
     @bp.get("/static/<path:name>")
     @auth.public
     def static_files(name):
-        if name.startswith(".") or "/." in name or ".." in name.split("/"):
+        a = load_asset(name)
+        if a is None:
             abort(404)
-        return send_from_directory(static_dir, name, max_age=3600)
+        cache = "public, max-age=31536000, immutable" if request.args.get("v") else "no-cache"
+        if request.headers.get("If-None-Match") == a["etag"]:
+            return Response(status=304, headers={"ETag": a["etag"], "Cache-Control": cache})
+        use_gz = a["gz"] is not None and "gzip" in request.headers.get("Accept-Encoding", "")
+        resp = Response(a["gz"] if use_gz else a["raw"], mimetype=a["mime"])
+        resp.headers["ETag"] = a["etag"]
+        resp.headers["Cache-Control"] = cache
+        resp.vary.add("Accept-Encoding")
+        if use_gz:
+            resp.headers["Content-Encoding"] = "gzip"
+        return resp
 
     # ---- anyone with a link -----------------------------------------------------------------------------------------
     @bp.get("/s/<token>")
@@ -368,7 +426,7 @@ def create_app(overrides=None):
     @bp.get("/")
     @auth.owner
     def owner_page():
-        return send_file(static_dir / "owner.html", mimetype="text/html", max_age=0)
+        return render_template("owner.html", base=base)
 
     @bp.get("/api/session")
     @auth.owner

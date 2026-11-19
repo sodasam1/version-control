@@ -54,8 +54,9 @@ window.Panel = (function () {
 
     // ---- waveform + transport ----
     const canvas = h("canvas", { class: "wave", "aria-label": "Waveform" });
-    const clock = h("span", { class: "time" }, "0:00");
-    const playBtn = h("button", { type: "button", class: "primary", onclick: () => compare.toggle() }, "Play");
+    const playBtn = h("button", { type: "button", class: "play-btn big", "data-state": "play", "aria-label": "Play", onclick: () => compare.toggle() });
+    const tNow = h("span", { class: "t t-now" }, "0:00"), tLen = h("span", { class: "t t-len" }, fmt(versions[0].duration));
+    const head = h("div", { class: "track-head" }, playBtn, h("div", { class: "track-text" }, h("span", { class: "title" }, o.title || ""), o.meta ? h("div", { class: "track-meta" }, o.meta) : null));
     const loopLabel = h("span", { class: "muted small" });
     const setA = h("button", { type: "button", onclick: () => { const p = compare.position(); compare.setLoop(p, compare.loop && compare.loop.b != null && compare.loop.b > p ? compare.loop.b : null, true); } }, "Set A");
     const setB = h("button", { type: "button", onclick: () => { const p = compare.position(), a = compare.loop ? compare.loop.a : 0; if (p > a) compare.setLoop(a, p, true); } }, "Set B");
@@ -67,20 +68,24 @@ window.Panel = (function () {
     const wave = window.Wave.attach(canvas, { peaks: versions[0].peaks, duration: versions[0].duration, label: "Waveform: click to jump, Shift-drag to select a loop", onSeek: (t) => { compare.seek(t); tick(t); },
       onLoop: (a, b) => { if (b - a > 0.05) compare.setLoop(a, b, true); } });
 
+    const fit = (p, n) => (p.length <= n ? p : Array.from({ length: n }, (_, i) => Math.max(...p.slice(Math.floor(i * p.length / n), Math.floor((i + 1) * p.length / n)))));
+    const bars = (v) => fit(v.peaks, Math.max(24, Math.floor((canvas.clientWidth || 360) / 4)));
+    if (window.ResizeObserver) new ResizeObserver(() => wave.set({ peaks: bars(versions[compare.active]) })).observe(canvas);
     function marks() { return comments.map((c) => ({ t: c.t_ms / 1000 })); }
-    function tick(t) { wave.set({ time: t, marks: marks() }); clock.textContent = fmt(t) + " / " + fmt(versions[compare.active].duration); highlight(t); }
+    function tick(t) { wave.set({ time: t, marks: marks() }); tNow.textContent = fmt(t); highlight(t); }
     function paint() {
       const s = compare.state(), v = versions[s.active];
       drawVersionButtons();
-      playBtn.textContent = s.playing ? "Pause" : "Play";
+      playBtn.dataset.state = s.playing ? "pause" : "play"; playBtn.setAttribute("aria-label", s.playing ? "Pause" : "Play");
       loopOn.checked = !!(s.loop && s.loop.on); loopOn.disabled = !s.loop;
       exact.checked = s.exact; exact.disabled = !compare.exactAllowed();
       match.checked = s.match; match.disabled = versions.every((x) => typeof x.lufs !== "number");
       loopLabel.textContent = s.loop ? "Loop " + fmt(s.loop.a) + (s.loop.b != null ? " to " + fmt(s.loop.b) : " from here (set B)") : "No loop. Shift-drag on the waveform, or use Set A / Set B.";
-      wave.set({ peaks: v.peaks, duration: v.duration, loop: s.loop ? { a: s.loop.a, b: s.loop.b, on: s.loop.on } : null, time: compare.position(), marks: marks() });
-      clock.textContent = fmt(compare.position()) + " / " + fmt(v.duration);
+      wave.set({ peaks: bars(v), duration: v.duration, loop: s.loop ? { a: s.loop.a, b: s.loop.b, on: s.loop.on } : null, time: compare.position(), marks: marks() });
+      tNow.textContent = fmt(compare.position()); tLen.textContent = fmt(v.duration);
     }
-    const transport = h("div", { class: "transport" }, playBtn, clock, setA, setB, clearLoop);
+    const transport = h("div", { class: "transport" }, setA, setB, clearLoop);
+    const waveBox = h("div", { class: "wave-box" }, canvas, tNow, tLen);
     const options = h("div", { class: "options" },
       h("label", { class: "inline", for: "loop-on" }, loopOn, " Loop"),
       h("label", { class: "inline", for: "loop-exact", title: "Downloads the looped section of every version (30 s at most) so they loop sample-locked" }, exact, " Exact loop"),
@@ -160,7 +165,7 @@ window.Panel = (function () {
     }
     document.addEventListener("keydown", onKey);
 
-    root.append(vbar, canvas, transport, loopLabel, options, msg,
+    root.append(head, vbar, waveBox, transport, loopLabel, options, msg,
       h("p", { class: "muted small" }, "Keys: space play/pause, 1-9 switch version, L loop, M match loudness."),
       h("h2", null, "Comments"), list, form);
     renderComments(); paint();

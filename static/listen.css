@@ -1,0 +1,71 @@
+/* "Listen": the look shared by music-share and Version Control (the same file lives in both repos; keep them identical).
+   Built on minimal.css: one ink colour, hairlines, the chosen accent only for what is playing and for primary buttons. No social parts of any kind. */
+:root { --logo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d5fd1'/%3E%3Cg fill='%23fff'%3E%3Crect x='7' y='13' width='3' height='6' rx='1.5'/%3E%3Crect x='12' y='8' width='3' height='16' rx='1.5'/%3E%3Crect x='17' y='11' width='3' height='10' rx='1.5'/%3E%3Crect x='22' y='14' width='3' height='4' rx='1.5'/%3E%3C/g%3E%3C/svg%3E"); }
+body { -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 44rem; padding-bottom: 7rem; }
+
+/* page header: logo and name on the left, one quiet link on the right */
+.page-head { display: flex; align-items: center; gap: 14px; padding: 1.1rem 0 .9rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
+.brand::before { content: ""; width: 26px; height: 26px; border-radius: 7px; background: var(--logo) center / cover; }
+.page-head .spacer { flex: 1; }
+.page-head a.quiet, .page-head summary { color: var(--muted); font-size: .9rem; text-decoration: none; cursor: pointer; }
+.page-head a.quiet:hover { color: var(--text); text-decoration: underline; }
+.page-head details > div { position: absolute; right: 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .6rem .8rem; z-index: 5; }
+
+/* the round play button */
+.play-btn { flex: none; width: 48px; height: 48px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: var(--accent); display: inline-grid; place-items: center; cursor: pointer; transition: transform .12s ease, filter .12s ease; }
+.play-btn:hover:not(:disabled) { filter: brightness(1.08); transform: scale(1.05); border: 0; }
+.play-btn::before { content: ""; width: 20px; height: 20px; background: var(--accent-text); -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat;
+  --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4v16l14-8z'/%3E%3C/svg%3E"); margin-left: 6%; }
+.play-btn[data-state="pause"]::before { --ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 4h5v16H5zM14 4h5v16h-5z'/%3E%3C/svg%3E"); margin-left: 0; }
+.play-btn.big { width: 68px; height: 68px; }
+.play-btn.big::before { width: 28px; height: 28px; }
+.play-btn.small { width: 38px; height: 38px; }
+.play-btn.small::before { width: 16px; height: 16px; }
+
+/* a track: round play button, title and facts, the waveform with the times at its ends */
+.track { margin: 0 0 1.7rem; }
+.track-head { display: flex; align-items: center; gap: 14px; }
+.track-text { min-width: 0; flex: 1; }
+.track .title { font-size: 1.05rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-decoration: none; letter-spacing: -.005em; }
+a.title:hover { text-decoration: underline; }
+.track.playing .title { color: var(--accent); }
+.track-meta { color: var(--muted); font-size: .85rem; margin-top: 1px; }
+.wave-box { position: relative; margin-top: .6rem; margin-bottom: 1.4rem; }
+.wave-box canvas.wave { height: 72px; }
+.wave-box .t { position: absolute; bottom: -1.15rem; font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wave-box .t-now { left: 0; } .wave-box .t-len { right: 0; }
+.track .notes { margin: 1.5rem 0 .2rem; }
+.track .links { margin: .5rem 0 0; font-size: .85rem; }
+.track .links a { color: var(--muted); }
+.track + .track { padding-top: 1.1rem; border-top: 1px solid var(--line); }
+
+/* a single track or a version page: bigger */
+.hero .track-head { gap: 18px; }
+.hero .title { font-size: 1.6rem; white-space: normal; }
+.hero .wave-box canvas.wave { height: 112px; }
+.hero .wave-box { margin-top: 1.4rem; }
+
+/* list headings */
+h2.section { font-size: .78rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; margin: 2rem 0 1rem; }
+.lead-row { display: flex; align-items: center; gap: 14px; padding: .7rem 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--text); }
+.lead-row .title { font-weight: 600; }
+.lead-row:hover .title { text-decoration: underline; }
+.empty { color: var(--muted); padding: 2.5rem 0; text-align: center; }
+
+/* the bar that stays at the bottom while something plays */
+.player-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--bg); border-top: 1px solid var(--line); padding: .6rem 16px calc(.6rem + env(safe-area-inset-bottom, 0px)); }
+.player-bar[hidden] { display: none; }
+.player-bar .inner { max-width: 44rem; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.bar-text { flex: 1; min-width: 0; }
+.bar-title { font-weight: 600; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-progress { height: 14px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.bar-progress::before { content: ""; height: 3px; width: 100%; background: var(--line); border-radius: 2px; }
+.bar-fill { position: absolute; height: 3px; background: var(--accent); border-radius: 2px; pointer-events: none; }
+.bar-progress { position: relative; }
+.bar-time { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 6.4rem; text-align: right; }
+
+@media (max-width: 520px) { .play-btn { width: 44px; height: 44px; } .hero .title { font-size: 1.3rem; } .bar-time { display: none; } }
+@media (prefers-reduced-motion: reduce) { .play-btn { transition: none; } }
+.pl-title { font-size: 1.6rem; letter-spacing: -.01em; margin: .2rem 0 .4rem; }

@@ -404,3 +404,42 @@ def test_restore_reports_damage_instead_of_hiding_it(owner, tmp_path):
 def test_big_uploads_are_parked_on_the_data_volume_not_the_boot_disks_tmp(owner, tmp_path):
     import tempfile
     assert Path(tempfile.gettempdir()) == tmp_path / "data" / "tmp"             # Werkzeug's spill-over file for a large upload goes here
+
+
+# ---- speed and the shared look ---------------------------------------------------------------------------------------------------------------------
+def test_server_timing_on_answers(owner, guest):
+    for client, url in ((owner, f"{B}/api/songs"), (guest, f"{B}/health")):
+        h = client.get(url).headers.get("Server-Timing", "")
+        assert h.startswith("app;dur=") and float(h.split("=")[1]) >= 0
+
+
+def test_pages_use_versioned_assets_that_cache_for_a_year_and_gzip(owner, guest):
+    import gzip as gz
+    import re
+    s = song(owner); version(owner, s["id"]); l = link(owner, s["id"])
+    page = guest.get(f"{B}/s/{l['token']}").get_data(as_text=True)
+    urls = re.findall(r'(?:href|src)="(/version-control/static/[^"]+\?v=[0-9a-f]{8})"', page)
+    assert len(urls) >= 7
+    r = guest.get(urls[0])
+    assert r.status_code == 200 and "immutable" in r.headers["Cache-Control"]
+    plain = guest.get(f"{B}/static/listen.css")
+    zipped = guest.get(f"{B}/static/listen.css", headers={"Accept-Encoding": "gzip"})
+    assert plain.headers["Cache-Control"] == "no-cache" and zipped.headers["Content-Encoding"] == "gzip" and gz.decompress(zipped.data) == plain.data
+    assert guest.get(f"{B}/static/listen.css", headers={"If-None-Match": plain.headers["ETag"]}).status_code == 304
+    for p in (f"{B}/static/../app/versioncontrol/__init__.py", f"{B}/static/.x", f"{B}/static/%2e%2e/wsgi.py"):
+        assert guest.get(p).status_code in (404, 308)
+
+
+def test_owner_page_carries_menu_and_placeholders_in_the_html(owner):
+    html = owner.get(B + "/").get_data(as_text=True)
+    for name in ("Songs", "Archive", "Backup"):
+        assert f">{name}</button>" in html
+    assert html.count('class="skeleton"') == 3 and 'rel="icon"' in html and 'class="brand"' in html
+
+
+def test_share_page_has_the_shared_header_favicon_and_no_social_parts(owner, guest):
+    s = song(owner, "Night Drive"); version(owner, s["id"]); l = link(owner, s["id"])
+    page = guest.get(f"{B}/s/{l['token']}").get_data(as_text=True)
+    assert 'class="brand">Version Control<' in page and 'rel="icon"' in page and 'property="og:title" content="Night Drive"' in page
+    for social in ("follow", "repost", "subscribe", "share on"):
+        assert social not in page.lower().replace("nofollow", "")

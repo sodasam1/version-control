@@ -6,7 +6,7 @@ BASE_PATH=/version-control
 PORT=8102
 PKGS="py3-flask py3-waitress ffmpeg"
 SVC_HOME=/var/empty
-SRC_MARKER="app/wsgi.py static/owner.html"
+SRC_MARKER="app/wsgi.py app/versioncontrol/templates/owner.html"
 HEALTH_PATH=/version-control/health
 SITE_AUTH=1
 # Program files stay on the boot disk; ALL data lives on the shared data volume (docs/STORAGE.md in personal-site), so a rebuilt server is simply pointed at it.

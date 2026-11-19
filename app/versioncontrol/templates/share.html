@@ -5,17 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>{{ title }}</title>
-<link rel="stylesheet" href="{{ base }}/static/minimal/minimal.css">
-<link rel="stylesheet" href="{{ base }}/static/versioncontrol.css">
-<script src="{{ base }}/static/minimal/theme.js"></script>
-<script src="{{ base }}/static/wave/wave.js" defer></script>
-<script src="{{ base }}/static/player.js" defer></script>
-<script src="{{ base }}/static/panel.js" defer></script>
-<script src="{{ base }}/static/share.js" defer></script>
+<meta property="og:title" content="{{ title }}">
+<meta property="og:description" content="Listen, compare the versions, leave a comment">
+<meta name="theme-color" content="#1d5fd1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d5fd1'/%3E%3Cg fill='%23fff'%3E%3Crect x='7' y='13' width='3' height='6' rx='1.5'/%3E%3Crect x='12' y='8' width='3' height='16' rx='1.5'/%3E%3Crect x='17' y='11' width='3' height='10' rx='1.5'/%3E%3Crect x='22' y='14' width='3' height='4' rx='1.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="{{ asset('minimal/minimal.css') }}">
+<link rel="stylesheet" href="{{ asset('listen.css') }}">
+<link rel="stylesheet" href="{{ asset('versioncontrol.css') }}">
+<script src="{{ asset('minimal/theme.js') }}"></script>
+<script src="{{ asset('wave/wave.js') }}" defer></script>
+<script src="{{ asset('player.js') }}" defer></script>
+<script src="{{ asset('panel.js') }}" defer></script>
+<script src="{{ asset('share.js') }}" defer></script>
 </head>
 <body>
-<div class="wrap" id="app" data-base="{{ base }}" data-token="{{ token }}">
-  <header class="site"><h1>{{ title }}</h1></header>
+<div class="wrap" id="app" data-base="{{ base }}" data-token="{{ token }}" data-title="{{ title }}">
+  <header class="page-head"><span class="brand">Version Control</span></header>
   <div id="root"><noscript>This page needs JavaScript to play.</noscript></div>
 </div>
 </body>

@@ -18,36 +18,44 @@
   const full = (p) => location.origin + p;
   const size = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
 
-  function tabs() {
-    const nav = $("#tabs"); nav.textContent = "";
-    for (const [k, label] of [["songs", "Songs"], ["archive", "Archive"], ["backup", "Backup"]]) {
-      nav.append(h("button", { type: "button", "aria-pressed": String(tab === k && !songId), onclick: () => { tab = k; songId = null; history.replaceState(null, "", "#"); run(render); } }, label));
-    }
+  // The tab buttons are in owner.html, so they are on screen before this script runs. Here they only get their clicks.
+  function markTabs() { for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-pressed", String(b.dataset.tab === tab && !songId)); }
+  for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; songId = null; history.replaceState(null, "", "#"); run(() => render(true)); });
+  function showSkeleton() {
+    const main = $("#main"); main.textContent = ""; main.setAttribute("aria-busy", "true");
+    for (let i = 0; i < 3; i++) main.append(h("div", { class: "skeleton", "aria-hidden": "true" }, h("div", { class: "sk-line" })));
   }
 
-  async function render() {
+  // `fresh` = a new screen (placeholders meanwhile); after an action the old content stays until the new is ready
+  async function render(fresh) {
     if (panel) { panel.destroy(); panel = null; }
     clearInterval(poll);
-    tabs();
-    const main = $("#main"); main.textContent = "";
-    if (songId) return renderSong(main);
-    if (tab === "backup") return renderBackup(main);
+    markTabs();
+    if (fresh) showSkeleton();
+    const main = document.createElement("main"); main.id = "main";
+    if (songId) await renderSong(main);
+    else if (tab === "backup") await renderBackup(main);
+    else await renderList(main);
+    $("#main").replaceWith(main);                      // swap in the finished screen in one go
+  }
+
+  async function renderList(main) {
     const songs = await api("songs" + (tab === "archive" ? "?archived=1" : ""));
     if (tab === "songs") main.append(h("div", { class: "actions" }, h("button", { class: "primary", type: "button", onclick: () => run(async () => {
       const title = prompt("Song title"); if (!title) return; const s = await send("songs", "POST", { title }); open(s.id); }) }, "New song")));
-    if (!songs.length) main.append(h("p", { class: "muted" }, tab === "songs" ? "No songs yet." : "Nothing archived."));
+    if (!songs.length) main.append(h("p", { class: "empty" }, tab === "songs" ? "No songs yet." : "Nothing archived."));
     for (const s of songs) {
-      main.append(h("div", { class: "row song-row", tabindex: "0", role: "button", onclick: () => open(s.id), onkeydown: (e) => { if (e.key === "Enter") open(s.id); } },
-        h("div", { class: "grow" }, h("div", { class: "title" }, s.title),
-          h("div", { class: "muted small" }, [s.version_count + " version(s)", s.latest_label ? "latest " + s.latest_label : "", s.comment_count + " comment(s)", s.created_at.slice(0, 10)].filter(Boolean).join(" · ")))));
+      main.append(h("div", { class: "lead-row song-row", tabindex: "0", role: "button", onclick: () => open(s.id), onkeydown: (e) => { if (e.key === "Enter") open(s.id); } },
+        h("div", { class: "track-text" }, h("span", { class: "title" }, s.title),
+          h("div", { class: "track-meta" }, [s.version_count + " version(s)", s.latest_label ? "latest " + s.latest_label : "", s.comment_count + " comment(s)", s.created_at.slice(0, 10)].filter(Boolean).join(" · ")))));
     }
   }
-  function open(id) { songId = id; history.replaceState(null, "", "#song=" + id); run(render); }
+  function open(id) { songId = id; history.replaceState(null, "", "#song=" + id); run(() => render(true)); }
 
   async function renderSong(main) {
     const s = await api("songs/" + songId);
     main.append(h("div", { class: "actions" }, h("button", { type: "button", onclick: () => { songId = null; history.replaceState(null, "", "#"); run(render); } }, "← All songs")),
-      h("h2", null, s.title), s.notes ? h("p", { class: "muted notes" }, s.notes) : null,
+      s.notes ? h("p", { class: "muted notes" }, s.notes) : null,
       h("div", { class: "actions" },
         h("button", { type: "button", onclick: () => run(async () => { const title = prompt("Title", s.title); if (title == null) return; const notes = prompt("Notes (optional)", s.notes); await send("songs/" + s.id, "PATCH", { title, notes: notes == null ? s.notes : notes }); await render(); }) }, "Rename"),
         s.archived
@@ -56,9 +64,9 @@
         h("button", { type: "button", onclick: () => run(async () => { const typed = prompt("This deletes the song, every version's audio and all comments, forever. Type the exact title to confirm:\n\n" + s.title); if (typed == null) return; await send("songs/" + s.id, "DELETE", { confirm: typed }); songId = null; await render(); }) }, "Delete forever")));
 
     // compare panel
-    const holder = h("div", { class: "panel-box" });
+    const holder = h("div", { class: "hero track panel-box" });
     main.append(holder);
-    panel = holder._panel = window.Panel.create(holder, { versions: s.versions, comments: s.comments, allowComments: true, ownerView: true,
+    panel = holder._panel = window.Panel.create(holder, { title: s.title, meta: s.versions.length + " version(s) \u00b7 " + s.created_at.slice(0, 10), versions: s.versions, comments: s.comments, allowComments: true, ownerView: true,
       api: { post: (b) => send(`songs/${s.id}/comments`, "POST", { body: b.body, t_ms: b.t_ms, version_id: b.version_id }), edit: () => Promise.reject(new Error("not editable")), del: (id) => send("comments/" + id, "DELETE") } });
 
     // versions
@@ -122,5 +130,5 @@
 
   const m = /^#song=(\d+)$/.exec(location.hash);
   if (m) songId = Number(m[1]);
-  run(render);
+  run(() => render(true));
 })();
