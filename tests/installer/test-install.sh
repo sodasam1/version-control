@@ -11,14 +11,14 @@ R="$W/root"; mkdir -p "$R/etc"; cp "$FIX/relayd.pristine.conf" "$R/etc/relayd.co
 A="sh $W/up/deploy/install.sh"
 $A --check > "$R/c0" 2>&1 && bad "--check passed with no volume mounted" || { grep -q 'does not exist' "$R/c0" && ok "no volume: it stops and says so, even in --check"; }
 mkdir -p "$R/mnt/data"
-$A --yes > "$R/o0" 2>&1 && bad "installed without the .volume-ok file" || { grep -q '.volume-ok' "$R/o0" && [ ! -e "$R/etc/versioncontrol.conf" ] && [ ! -e "$R/etc/rc.d/versioncontrol" ] && [ ! -d "$R/mnt/data/version-control" ] && ok "volume without .volume-ok: stops before creating anything (no files land on the boot disk)"; }
+$A --yes > "$R/o0" 2>&1 && bad "installed without the .volume-ok file" || { grep -q '.volume-ok' "$R/o0" && [ ! -e "$R/etc/versioncontrol.conf" ] && [ ! -e "$R/etc/rc.d/versioncontrol" ] && [ ! -d "$R/mnt/data/apps/version-control" ] && ok "volume without .volume-ok: stops before creating anything (no files land on the boot disk)"; }
 touch "$R/mnt/data/.volume-ok"
 $A --check > "$R/c" 2>&1; [ ! -e "$R/etc/versioncontrol.conf" ] && ok "--check writes nothing" || bad "--check wrote something"
 $A --yes > "$R/o1" 2>&1 || { bad "install failed"; cat "$R/o1"; }
-[ -d "$R/mnt/data/version-control/data" ] && [ -d "$R/mnt/data/version-control/backup" ] && [ -d "$R/mnt/data/version-control/restore" ] && ok "data, backup and restore folders are created on the volume" || bad "folders"
+[ -d "$R/mnt/data/apps/version-control/data" ] && [ -d "$R/mnt/data/apps/version-control/backup" ] && [ -d "$R/mnt/data/apps/version-control/restore" ] && ok "data, backup and restore folders are created on the volume" || bad "folders"
 grep -q '^rc_pre() {$' "$R/etc/rc.d/versioncontrol" && grep -q ' on /mnt/data type ' "$R/etc/rc.d/versioncontrol" && ok "service script refuses to start unless /mnt/data is mounted and holds .volume-ok" || bad "rc_pre guard"
 grep -q 'daemon_flags="-m waitress --listen=127.0.0.1:8102 --threads=4 wsgi:app"' "$R/etc/rc.d/versioncontrol" && grep -q 'daemon_user="_versioncontrol"' "$R/etc/rc.d/versioncontrol" && grep -q 'daemon_execdir="/usr/local/version-control/app"' "$R/etc/rc.d/versioncontrol" && ok "service script: port 8102, user _versioncontrol" || bad "rc.d"
-grep -q '^VERSIONCONTROL_REQUIRE_VOLUME=1$' "$R/etc/versioncontrol.conf" && grep -q '^VERSIONCONTROL_DATA_DIR=/mnt/data/version-control/data$' "$R/etc/versioncontrol.conf" && grep -q '^VERSIONCONTROL_VOLUME_MARKER=/mnt/data/.volume-ok$' "$R/etc/versioncontrol.conf" && ok "conf: data on the volume, and the app itself refuses to start without it" || bad "conf"
+grep -q '^VERSIONCONTROL_REQUIRE_VOLUME=1$' "$R/etc/versioncontrol.conf" && grep -q '^VERSIONCONTROL_DATA_DIR=/mnt/data/apps/version-control/data$' "$R/etc/versioncontrol.conf" && grep -q '^VERSIONCONTROL_VOLUME_MARKER=/mnt/data/.volume-ok$' "$R/etc/versioncontrol.conf" && ok "conf: data on the volume, and the app itself refuses to start without it" || bad "conf"
 for need in '<versioncontrol> { 127.0.0.1 }' 'path "/version-control" forward to <versioncontrol>' 'path "/version-control/\*" forward to <versioncontrol>' 'forward to <versioncontrol> port 8102'; do
   [ "$(grep -c "$need" "$R/etc/relayd.conf")" = 1 ] && ok "relayd has exactly one: $need" || bad "relayd: $need"
 done

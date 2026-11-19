@@ -14,12 +14,12 @@ SITE_AUTH=1
 # (VERSIONCONTROL_REQUIRE_VOLUME) refuse to start without it. Keep data and backup on the SAME filesystem: backups hard-link the audio.
 DATA_ROOT=/mnt/data
 REQUIRE_MOUNT=$DATA_ROOT
-DIRS="$DATA_ROOT/version-control/data,@svc,@svc,751 $DATA_ROOT/version-control/backup,@svc,@svc,755 $DATA_ROOT/version-control/restore,@login,@svc,775"
-CONF_LINES="VERSIONCONTROL_DATA_DIR=$DATA_ROOT/version-control/data
+DIRS="$DATA_ROOT/apps/version-control/data,@svc,@svc,751 $DATA_ROOT/apps/version-control/backup,@svc,@svc,755 $DATA_ROOT/apps/version-control/restore,@login,@svc,775"
+CONF_LINES="VERSIONCONTROL_DATA_DIR=$DATA_ROOT/apps/version-control/data
 VERSIONCONTROL_REQUIRE_VOLUME=1
 VERSIONCONTROL_VOLUME_MARKER=$DATA_ROOT/.volume-ok
 VERSIONCONTROL_BASE_PATH=/version-control
 VERSIONCONTROL_STATIC_DIR=/usr/local/version-control/static
-VERSIONCONTROL_BACKUP_DIR=$DATA_ROOT/version-control/backup
-VERSIONCONTROL_RESTORE_DIR=$DATA_ROOT/version-control/restore
+VERSIONCONTROL_BACKUP_DIR=$DATA_ROOT/apps/version-control/backup
+VERSIONCONTROL_RESTORE_DIR=$DATA_ROOT/apps/version-control/restore
 VERSIONCONTROL_OWNER_NAME=Owner"
