@@ -65,8 +65,11 @@ def create_app(overrides=None):
     ffprobe = cfg["ffprobe"] if "ffprobe" in cfg else shutil.which("ffprobe")
     app.config.update(MAX_CONTENT_LENGTH=int(cfg.get("VERSIONCONTROL_MAX_UPLOAD_MB", "1024")) * 1024 * 1024, TESTING=bool(cfg.get("TESTING")))
     # The big volume must be mounted, or audio would silently fill the small boot disk under an empty mount point.
-    if cfg.get("VERSIONCONTROL_REQUIRE_VOLUME") == "1" and not (data_dir / ".volume-ok").is_file():
-        raise RuntimeError(f"{data_dir}/.volume-ok is missing: the storage volume is probably not mounted. Refusing to start. (see RESTORE.html, storage steps)")
+    # The marker is normally the volume's own root file (VERSIONCONTROL_VOLUME_MARKER=/mnt/data/.volume-ok, shared by every app on the volume);
+    # without that setting it is .volume-ok inside the data folder, as before.
+    marker = Path(cfg.get("VERSIONCONTROL_VOLUME_MARKER") or (data_dir / ".volume-ok"))
+    if cfg.get("VERSIONCONTROL_REQUIRE_VOLUME") == "1" and not marker.is_file():
+        raise RuntimeError(f"{marker} is missing: the storage volume is probably not mounted. Refusing to start. (see RESTORE.html, storage steps)")
     os.umask(0o027)                                           # files this service creates (the database holds link secrets) are not readable by other users
     (data_dir / "audio").mkdir(mode=0o750, parents=True, exist_ok=True)
     (data_dir / "tmp").mkdir(mode=0o750, parents=True, exist_ok=True)

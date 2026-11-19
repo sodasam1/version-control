@@ -341,6 +341,20 @@ def test_refuses_to_start_when_the_volume_is_not_mounted(tmp_path, site):
     create_app(base)
 
 
+def test_the_volume_marker_can_be_the_shared_root_file_of_the_volume(tmp_path, site):
+    from versioncontrol import create_app
+    vol = tmp_path / "vol"; data = vol / "version-control" / "data"
+    base = {"TESTING": True, "JOBS_SYNC": True, "VERSIONCONTROL_DATA_DIR": str(data), "VERSIONCONTROL_REQUIRE_VOLUME": "1",
+            "VERSIONCONTROL_VOLUME_MARKER": str(vol / ".volume-ok"), "VERSIONCONTROL_STATIC_DIR": str(ROOT / "static"),
+            "VERSIONCONTROL_SITE_KEY_FILE": str(site / "keys" / "versioncontrol.key")}
+    with pytest.raises(RuntimeError, match=r"\.volume-ok"):
+        create_app(base)
+    assert not vol.exists()                                                                   # nothing was created before refusing
+    vol.mkdir(); (vol / ".volume-ok").write_text("")                                         # the volume's root file, not a file in the data folder
+    create_app(base)
+    assert (data / "audio").is_dir()
+
+
 def test_backup_hard_links_audio_so_it_costs_no_space_and_survives_delete_forever(owner, tmp_path):
     s = song(owner, "Keep"); v = version(owner, s["id"], "v1")
     r = owner.post(f"{B}/api/backup").json
