@@ -440,6 +440,6 @@ def test_owner_page_carries_menu_and_placeholders_in_the_html(owner):
 def test_share_page_has_the_shared_header_favicon_and_no_social_parts(owner, guest):
     s = song(owner, "Night Drive"); version(owner, s["id"]); l = link(owner, s["id"])
     page = guest.get(f"{B}/s/{l['token']}").get_data(as_text=True)
-    assert 'class="brand">Version Control<' in page and 'rel="icon"' in page and 'property="og:title" content="Night Drive"' in page
+    assert 'class="brand"><svg' in page and 'Version Control</span>' in page and 'rel="icon"' in page and 'property="og:title" content="Night Drive"' in page
     for social in ("follow", "repost", "subscribe", "share on"):
         assert social not in page.lower().replace("nofollow", "")
