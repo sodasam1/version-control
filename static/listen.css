@@ -6,7 +6,9 @@ body { -webkit-font-smoothing: antialiased; }
 /* page header: logo and name on the left, one quiet link on the right */
 .page-head { display: flex; align-items: center; gap: 14px; padding: 1.1rem 0 .9rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
-.brand svg { flex: none; width: 26px; height: 26px; }   /* the logo is inline markup in the page: a data: URL image is blocked by the server's own Content-Security-Policy */
+.brand svg { flex: none; width: 26px; height: 26px; }
+.brand .mark-bg { fill: var(--accent); }                       /* the mark takes the chosen accent colour, like the rest of the look */
+.brand .mark-fg { fill: var(--accent-text); }   /* the logo is inline markup in the page: a data: URL image is blocked by the server's own Content-Security-Policy */
 .page-head .spacer { flex: 1; }
 .page-head a.quiet, .page-head summary { color: var(--muted); font-size: .9rem; text-decoration: none; cursor: pointer; }
 .page-head a.quiet:hover { color: var(--text); text-decoration: underline; }

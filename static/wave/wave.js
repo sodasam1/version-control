@@ -11,7 +11,7 @@ window.Wave = (function () {
   function css() {
     if (!colors) {
       const s = getComputedStyle(document.documentElement);
-      colors = { accent: s.getPropertyValue("--accent").trim() || "#1d5fd1", muted: s.getPropertyValue("--muted").trim() || "#888" };
+      colors = { accent: s.getPropertyValue("--accent").trim() || "#c8400b", muted: s.getPropertyValue("--muted").trim() || "#888" };
     }
     return colors;
   }
