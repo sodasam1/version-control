@@ -3,17 +3,17 @@
    The accent is used only for the current tab, primary buttons and the played part of a waveform. */
 :root {
   --bg: #fff; --panel: #f6f6f6; --text: #111; --muted: #6b6b6b; --line: #e4e4e4;
-  --accent: var(--acc-l, #c8400b); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00;
+  --accent: var(--acc-l, #1d5fd1); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00;
   --fs: 15px; --lh: 1.45; --r: 4px;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #101010; --panel: #1a1a1a; --text: #ececec; --muted: #9a9a9a; --line: #2c2c2c;
-    --accent: var(--acc-d, #ff7a3d); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
+    --accent: var(--acc-d, #6ea8ff); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
 }
 html[data-colors="light"] { color-scheme: light; --bg: #fff; --panel: #f6f6f6; --text: #111; --muted: #6b6b6b; --line: #e4e4e4;
-  --accent: var(--acc-l, #c8400b); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00; }
+  --accent: var(--acc-l, #1d5fd1); --accent-text: #fff; --err: #b00020; --ok: #111; --warn: #8a5a00; }
 html[data-colors="dark"] { color-scheme: dark; --bg: #101010; --panel: #1a1a1a; --text: #ececec; --muted: #9a9a9a; --line: #2c2c2c;
-  --accent: var(--acc-d, #ff7a3d); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
+  --accent: var(--acc-d, #6ea8ff); --accent-text: #101010; --err: #ff8a80; --ok: #ececec; --warn: #e0b050; }
 html[data-accent="blue"], [data-a="blue"] { --acc-l: #1d5fd1; --acc-d: #6ea8ff; }
 html[data-accent="teal"], [data-a="teal"] { --acc-l: #0f766e; --acc-d: #3ecbb9; }
 html[data-accent="green"], [data-a="green"] { --acc-l: #2e7d32; --acc-d: #5fd068; }

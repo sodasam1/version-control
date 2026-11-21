@@ -18,7 +18,7 @@
   function render() {
     host.textContent = "";
     const colors = root.dataset.colors || "auto";
-    const accent = root.dataset.accent || "orange";
+    const accent = root.dataset.accent || "blue";
     const g1 = document.createElement("div"); g1.className = "theme-row"; g1.setAttribute("role", "group"); g1.setAttribute("aria-label", "Colors");
     for (const c of ["auto", "light", "dark"]) {
       g1.appendChild(button(c[0].toUpperCase() + c.slice(1), colors === c, () => {
@@ -27,7 +27,7 @@
       }));
     }
     const g2 = document.createElement("div"); g2.className = "accent-row"; g2.setAttribute("role", "group"); g2.setAttribute("aria-label", "Accent");
-    for (const a of ["orange", "blue", "teal", "green", "purple", "pink", "ink"]) {
+    for (const a of ["blue", "teal", "green", "purple", "pink", "ink", "orange"]) {
       const b = button("", accent === a, () => {
         root.dataset.accent = a; store.set("site.accent", a); render(); document.dispatchEvent(new Event("themechange"));
       }, { "data-a": a, "aria-label": a });
